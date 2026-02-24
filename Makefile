@@ -1,5 +1,5 @@
 # Image URL to use all building/pushing image targets
-IMG ?= kdex-tech/kdex-themeserver:latest
+IMG ?= kdex-tech/backend-static:latest
 
 REPOSITORY ?= 
 # if REPOSITORY is set make sure it ends with a /
