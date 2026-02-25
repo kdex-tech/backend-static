@@ -13,6 +13,7 @@ runs:
   - name: Push image
     shell: bash
     run: |
-      export IMG=$(echo ${{ github.repository }} | tr '[A-Z]' '[a-z]')
       export REPOSITORY=ghcr.io
+      export IMG=$(echo ${{ github.repository }} | tr '[A-Z]' '[a-z]')
+      export TAG=$(echo ${{ github.ref }} | sed -e 's,.*/\(.*\),\1,')
       make docker-buildx
