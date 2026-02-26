@@ -32,19 +32,15 @@
 			Access-Control-Allow-Origin "{header.Origin}"
 			Access-Control-Allow-Methods "GET,OPTIONS"
 			Access-Control-Allow-Headers "{$ALLOWED_HEADERS:*}"
-			# Access-Control-Allow-Credentials "true"
 			Access-Control-Max-Age "86400"
 			Vary "Origin"
 		}
 		respond 204
 	}
 
-	handle @cors_origin {
-		header {
-			Access-Control-Allow-Origin "{header.Origin}"
-			# Access-Control-Allow-Credentials "true"
-			Vary "Origin"
-		}
+	header @cors_origin {
+		Access-Control-Allow-Origin "{header.Origin}"
+		Vary "Origin"
 	}
 
 	uri @prefix strip_prefix {$PATH_PREFIX:/_prefix_not_set}
