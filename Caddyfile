@@ -40,17 +40,20 @@
 
 	header @cors_origin {
 		Access-Control-Allow-Origin "{header.Origin}"
-		Vary "Origin"
+		+Vary "Origin"
 	}
 
 	uri @prefix strip_prefix {$PATH_PREFIX:/_prefix_not_set}
 
 	import {$CADDY_IMPORTS_PATH:/etc/caddy.d/*}
 
-	respond / 200
+	@healthcheck {
+		path /
+		header User-Agent kube-probe/*
+	}
+	respond @healthcheck 200
 
 	root * {$PUBLIC_RESOURCES_DIR:/public}
-	file_server
-
 	encode gzip
+	file_server
 }

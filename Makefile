@@ -114,4 +114,39 @@ test:
 	echo "    Success: PATH_PREFIX is working"; \
 	kill $$TEST_PREFIX_PID; \
 	\
+	echo "  - Testing health probe (200 OK)"; \
+	STATUS_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -H "User-Agent: kube-probe/1.28" "http://localhost:$(CADDY_PORT)/"); \
+	if [ "$$STATUS_CODE" != "200" ]; then \
+		echo "    Error: Expected 200 for health probe but received $$STATUS_CODE"; \
+		exit 1; \
+	fi; \
+	echo "    Success: Received 200 OK for health probe"; \
+	\
+	echo "  - Testing caching (304 Not Modified)"; \
+	RESPONSE_HEADERS=$$(curl -s -i "http://localhost:$(CADDY_PORT)/" -o /dev/null -D -); \
+	ETAG=$$(echo "$$RESPONSE_HEADERS" | grep -i '^etag:' | awk '{print $$2}' | tr -d '\r\n'); \
+	if [ -z "$$ETAG" ]; then \
+		echo "    Error: No ETag returned for /"; \
+		exit 1; \
+	fi; \
+	STATUS_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -H "If-None-Match: $$ETAG" "http://localhost:$(CADDY_PORT)/"); \
+	if [ "$$STATUS_CODE" != "304" ]; then \
+		echo "    Error: Expected 304 but received $$STATUS_CODE for /"; \
+		exit 1; \
+	fi; \
+	echo "    Success: Received 304 Not Modified for /"; \
+	\
+	RESPONSE_HEADERS=$$(curl -s -i "http://localhost:$(CADDY_PORT)/index.html" -o /dev/null -D -); \
+	ETAG=$$(echo "$$RESPONSE_HEADERS" | grep -i '^etag:' | awk '{print $$2}' | tr -d '\r\n'); \
+	if [ -z "$$ETAG" ]; then \
+		echo "    Error: No ETag returned for index.html"; \
+		exit 1; \
+	fi; \
+	STATUS_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -H "If-None-Match: $$ETAG" "http://localhost:$(CADDY_PORT)/index.html"); \
+	if [ "$$STATUS_CODE" != "304" ]; then \
+		echo "    Error: Expected 304 but received $$STATUS_CODE for index.html"; \
+		exit 1; \
+	fi; \
+	echo "    Success: Received 304 Not Modified for index.html"; \
+	\
 	echo "--> All tests passed"
