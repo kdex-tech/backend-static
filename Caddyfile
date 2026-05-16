@@ -7,7 +7,7 @@
 	}
 }
 
-:{$CADDY_PORT:80} {
+:{$CADDY_PORT:8080} {
 	log {
 		format json
 		output stdout

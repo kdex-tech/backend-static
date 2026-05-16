@@ -50,12 +50,16 @@ docker-push: ## Push docker image with the manager.
 
 PLATFORMS ?= linux/arm64,linux/amd64
 .PHONY: docker-buildx
-docker-buildx: ## Build and push docker image for the manager for cross-platform support
-	# copy existing Dockerfile and insert --platform=${BUILDPLATFORM} into Dockerfile.cross, and preserve the original Dockerfile
-	sed -e '1 s/\(^FROM\)/FROM --platform=\$$\{BUILDPLATFORM\}/; t' -e ' 1,// s//FROM --platform=\$$\{BUILDPLATFORM\}/' Dockerfile > Dockerfile.cross
+docker-buildx: ## Build and push docker image for cross-platform support
+	# This Dockerfile is single-stage, so we do NOT inject
+	# --platform=${BUILDPLATFORM} on the FROM. buildx --platform handles
+	# per-target builds natively (with QEMU emulation for non-native
+	# targets); forcing BUILDPLATFORM would make every target's image
+	# contain the build host's binaries while the manifest list mis-tags
+	# them with the target arch. Same fix that landed in kdex-cli-tools
+	# v0.3.11 - see kdex-tech/cli-tools commit history.
 	$(CONTAINER_TOOL) buildx inspect kdex-builder >/dev/null 2>&1 || $(CONTAINER_TOOL) buildx create --name kdex-builder --use
-	$(CONTAINER_TOOL) buildx build --push --platform=$(PLATFORMS) --tag ${REPOSITORY}${IMG}${TAG} --tag ${REPOSITORY}${IMG}:latest -f Dockerfile.cross .
-	rm Dockerfile.cross
+	$(CONTAINER_TOOL) buildx build --push --platform=$(PLATFORMS) --tag ${REPOSITORY}${IMG}${TAG} --tag ${REPOSITORY}${IMG}:latest .
 
 ##@ Testing
 
